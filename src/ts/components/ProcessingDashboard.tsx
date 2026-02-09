@@ -1,5 +1,6 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import type {FileEntry, IndexStats} from '../types/schema';
+import type {LogEntry} from '../hooks/useWorkerPool';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -14,6 +15,8 @@ interface ProcessingDashboardProps {
     processing: boolean;
     /** Callback to abort all workers (with confirmation). */
     onCancel: () => void;
+    /** Timestamped log entries from the processing pipeline. */
+    logs: LogEntry[];
 }
 
 // ---------------------------------------------------------------------------
@@ -153,8 +156,15 @@ const ProcessingDashboard: React.FC<ProcessingDashboardProps> = ({
                                                                      sotStats,
                                                                      processing,
                                                                      onCancel,
+                                                                     logs,
                                                                  }) => {
     const [confirmingCancel, setConfirmingCancel] = useState(false);
+    const logEndRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll to bottom when new log entries arrive.
+    useEffect(() => {
+        logEndRef.current?.scrollIntoView({behavior: 'smooth'});
+    }, [logs.length]);
 
     const handleCancelClick = useCallback(() => {
         if (confirmingCancel) {
@@ -225,6 +235,39 @@ const ProcessingDashboard: React.FC<ProcessingDashboardProps> = ({
             ({formatNumber(sotStats.activeCount)} active,{' '}
                         {formatNumber(sotStats.terminatedCount)} terminated)
           </span>
+                </div>
+            )}
+
+            {/* Live log feed */}
+            {logs.length > 0 && (
+                <div
+                    style={{
+                        marginTop: '24px',
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-default)',
+                        fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+                        fontSize: '12px',
+                        lineHeight: '1.6',
+                        color: 'var(--text-secondary)',
+                    }}
+                >
+                    {logs.map((entry, i) => {
+                        const d = new Date(entry.timestamp);
+                        const ts = [d.getHours(), d.getMinutes(), d.getSeconds()]
+                            .map((n) => String(n).padStart(2, '0'))
+                            .join(':');
+                        return (
+                            <div key={i}>
+                                <span style={{color: 'var(--text-tertiary)', marginRight: '8px'}}>{ts}</span>
+                                {entry.message}
+                            </div>
+                        );
+                    })}
+                    <div ref={logEndRef} />
                 </div>
             )}
 

@@ -647,6 +647,7 @@ export default function App() {
                                 sotStats={workerPool.sotStats}
                                 processing={workerPool.isProcessing}
                                 onCancel={handleCancelProcessing}
+                                logs={workerPool.logs}
                             />
                         </ErrorBoundary>
                     )}

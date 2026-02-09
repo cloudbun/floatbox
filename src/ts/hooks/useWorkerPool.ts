@@ -20,6 +20,12 @@ import type {WorkerInMessage, WorkerOutMessage} from '../types/messages';
 // Types
 // ---------------------------------------------------------------------------
 
+/** A single timestamped log entry from the processing pipeline. */
+export interface LogEntry {
+    timestamp: number;
+    message: string;
+}
+
 /** Return type of the useWorkerPool hook. */
 export interface UseWorkerPoolReturn {
     /**
@@ -74,6 +80,9 @@ export interface UseWorkerPoolReturn {
 
     /** Restore previously persisted SoT stats. */
     restoreSotStats: (stats: IndexStats) => void;
+
+    /** Timestamped log entries from the processing pipeline. */
+    logs: LogEntry[];
 }
 
 /** Duration in ms after which a worker with no progress is considered crashed. */
@@ -100,6 +109,12 @@ export function useWorkerPool(): UseWorkerPoolReturn {
         () => new Map()
     );
     const [cachedSotIndex, setCachedSotIndex] = useState<string | null>(null);
+    const [logs, setLogs] = useState<LogEntry[]>([]);
+
+    /** Append a timestamped log entry. */
+    const addLog = useCallback((message: string) => {
+        setLogs((prev) => [...prev, {timestamp: Date.now(), message}]);
+    }, []);
 
     /** Ref to all active workers for cleanup on abort. */
     const activeWorkersRef = useRef<Worker[]>([]);
@@ -214,7 +229,8 @@ export function useWorkerPool(): UseWorkerPoolReturn {
 
         activeWorkersRef.current = [];
         setIsProcessing(false);
-    }, [clearAllTimeouts, postToWorker]);
+        addLog('Processing aborted');
+    }, [clearAllTimeouts, postToWorker, addLog]);
 
     /**
      * Process a single satellite file using a dedicated worker.
@@ -243,6 +259,7 @@ export function useWorkerPool(): UseWorkerPoolReturn {
                 waitForReady(
                     new Worker(new URL('../workers/satellite.worker.ts', import.meta.url), {type: 'module'})
                 ).then((worker) => {
+                    addLog(`Worker ready: ${fileEntry.name}`);
                     // Set up crash detection timeout
                     resetWorkerTimeout(fileEntry.id, () => {
                         onFileError(
@@ -261,6 +278,7 @@ export function useWorkerPool(): UseWorkerPoolReturn {
                             switch (msg.type) {
                                 case 'SOT_INDEX_LOADED':
                                     // SoT index loaded, now send the satellite file for parsing
+                                    addLog(`Processing: ${fileEntry.name}...`);
                                     postToWorker(worker, {
                                         type: 'PARSE_SATELLITE',
                                         buffer,
@@ -285,6 +303,7 @@ export function useWorkerPool(): UseWorkerPoolReturn {
                                         clearTimeout(existing);
                                         timeoutMapRef.current.delete(fileEntry.id);
                                     }
+                                    addLog(`Complete: ${fileEntry.name}`);
                                     worker.terminate();
                                     resolve(msg.result);
                                     break;
@@ -296,6 +315,7 @@ export function useWorkerPool(): UseWorkerPoolReturn {
                                         clearTimeout(existingTimeout);
                                         timeoutMapRef.current.delete(fileEntry.id);
                                     }
+                                    addLog(`Error: ${fileEntry.name} — ${msg.error}`);
                                     onFileError(msg.fileId, msg.error);
                                     worker.terminate();
                                     resolve(null);
@@ -333,7 +353,7 @@ export function useWorkerPool(): UseWorkerPoolReturn {
                     });
             });
         },
-        [waitForReady, postToWorker, resetWorkerTimeout]
+        [waitForReady, postToWorker, resetWorkerTimeout, addLog]
     );
 
     /**
@@ -426,6 +446,7 @@ export function useWorkerPool(): UseWorkerPoolReturn {
             setIsProcessing(true);
             setSotStats(null);
             setJoinResults(new Map());
+            setLogs([]);
 
             try {
                 // -------------------------------------------------------------------
@@ -438,9 +459,11 @@ export function useWorkerPool(): UseWorkerPoolReturn {
                     return;
                 }
 
+                addLog('Initializing SoT worker...');
                 const sotWorker = await waitForReady(
                     new Worker(new URL('../workers/sot.worker.ts', import.meta.url), {type: 'module'})
                 );
+                addLog('SoT worker ready (WASM loaded)');
 
                 if (abortedRef.current) {
                     sotWorker.terminate();
@@ -482,6 +505,7 @@ export function useWorkerPool(): UseWorkerPoolReturn {
                                         clearTimeout(existing);
                                         timeoutMapRef.current.delete(sotFile.id);
                                     }
+                                    addLog(`SoT index built — ${msg.stats.totalRecords} users (${msg.stats.activeCount} active, ${msg.stats.terminatedCount} terminated)`);
                                     sotWorker.terminate();
                                     resolve({
                                         serializedIndex: msg.serializedIndex,
@@ -496,6 +520,7 @@ export function useWorkerPool(): UseWorkerPoolReturn {
                                         clearTimeout(existingTimeout);
                                         timeoutMapRef.current.delete(sotFile.id);
                                     }
+                                    addLog(`Error: ${sotFile.name} — ${msg.error}`);
                                     onFileError(msg.fileId, msg.error);
                                     sotWorker.terminate();
                                     resolve(null);
@@ -519,6 +544,7 @@ export function useWorkerPool(): UseWorkerPoolReturn {
                     });
 
                     // Send PARSE_SOT with the SoT file buffer
+                    addLog(`Parsing Source of Truth: ${sotFile.name}...`);
                     postToWorker(sotWorker, {
                         type: 'PARSE_SOT',
                         buffer: sotBuffer,
@@ -546,6 +572,7 @@ export function useWorkerPool(): UseWorkerPoolReturn {
                 // -------------------------------------------------------------------
                 // Phase 2: Parse satellites in parallel
                 // -------------------------------------------------------------------
+                addLog(`Spawning ${satellites.length} satellite worker${satellites.length !== 1 ? 's' : ''}...`);
                 const satellitePromises = satellites.map((sat) => {
                     const buffer = getBuffer(sat.id);
                     if (!buffer) {
@@ -582,6 +609,7 @@ export function useWorkerPool(): UseWorkerPoolReturn {
                 }
 
                 setJoinResults(resultMap);
+                addLog('Processing complete');
             } catch (err) {
                 const message =
                     err instanceof Error ? err.message : 'Unknown processing error';
@@ -604,6 +632,7 @@ export function useWorkerPool(): UseWorkerPoolReturn {
             processSatellite,
             resetWorkerTimeout,
             clearAllTimeouts,
+            addLog,
         ]
     );
 
@@ -626,5 +655,6 @@ export function useWorkerPool(): UseWorkerPoolReturn {
         cachedSotIndex,
         restoreCachedSotIndex,
         restoreSotStats,
+        logs,
     };
 }
