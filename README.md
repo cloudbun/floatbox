@@ -9,7 +9,7 @@ All processing happens client-side via WebAssembly (Go) and Web Workers — no d
 ### Docker (pull from GHCR)
 
 ```sh
-docker compose up
+docker run -p 8443:8080 ghcr.io/cloudbun/floatbox:latest
 ```
 
 Open http://localhost:8443.
