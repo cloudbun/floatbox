@@ -1,0 +1,4 @@
+login,email,displayName,status,group,lastLogin
+achen,achen@acme.com,Alice Chen,ACTIVE,Slack-Admin,2026-02-07T10:00:00Z
+cwhite,cwhite@acme.com,Carol White,ACTIVE,Slack-User,2026-02-07T09:30:00Z
+neworphan,orphan@unknown.com,Unknown Person,ACTIVE,Slack-Admin,2026-02-01T12:00:00Z

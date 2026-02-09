@@ -1,0 +1,51 @@
+employee_id,full_name,email_address,department,manager,employment_status
+E1001,Alice Chen,achen@acme.com,Engineering,Bob Martinez,active
+E1002,Bob Martinez,bmartinez@acme.com,Engineering,Carol White,active
+E1003,Carol White,cwhite@acme.com,Engineering,Diana Patel,active
+E1004,Diana Patel,dpatel@acme.com,VP Engineering,Frank Sullivan,active
+E1005,Frank Sullivan,fsullivan@acme.com,CTO Office,Margaret Liu,active
+E1006,Grace Nakamura,gnakamura@acme.com,Engineering,Bob Martinez,active
+E1007,Hector Ruiz,hruiz@acme.com,Engineering,Carol White,active
+E1008,Irene Bogdanova,ibogdanova@acme.com,Engineering,Bob Martinez,active
+E1009,James O'Brien,jobrien@acme.com,Security,Karen Schwartz,active
+E1010,Karen Schwartz,kschwartz@acme.com,Security,Frank Sullivan,active
+E1011,Lars Eriksson,leriksson@acme.com,Infrastructure,Karen Schwartz,active
+E1012,Maria Garcia,mgarcia@acme.com,Data Science,Diana Patel,active
+E1013,Nikolai Petrov,npetrov@acme.com,Infrastructure,Karen Schwartz,active
+E1014,Olivia Thompson,othompson@acme.com,Product,Patricia Dunn,active
+E1015,Patricia Dunn,pdunn@acme.com,VP Product,Frank Sullivan,active
+E1016,Qiang Li,qli@acme.com,Data Science,Maria Garcia,active
+E1017,Raj Venkatesh,rvenkatesh@acme.com,Engineering,Carol White,active
+E1018,Sofia Andersson,sandersson@acme.com,HR,Patricia Dunn,active
+E1019,Thomas Muller,tmuller@acme.com,Finance,Victor Okafor,active
+E1020,Ursula Braun,ubraun@acme.com,Finance,Victor Okafor,active
+E1021,Victor Okafor,vokafor@acme.com,VP Finance,Frank Sullivan,active
+E1022,Wendy Zhao,wzhao@acme.com,Engineering,Bob Martinez,active
+E1023,Xavier Dominguez,xdominguez@acme.com,Infrastructure,Karen Schwartz,active
+E1024,Yuki Tanaka,ytanaka@acme.com,Product,Olivia Thompson,active
+E1025,Zara Ahmed,zahmed@acme.com,Data Science,Maria Garcia,active
+E1026,Andre Dupont,adupont@acme.com,Engineering,Carol White,active
+E1027,Beatriz Costa,bcosta@acme.com,HR,Sofia Andersson,active
+E1028,Cheng Wei,cwei@acme.com,Engineering,Bob Martinez,active
+E1029,Dmitri Volkov,dvolkov@acme.com,Security,James O'Brien,active
+E1030,Elena Rossi,erossi@acme.com,Product,Olivia Thompson,active
+E1031,Fatima Al-Hassan,falhassan@acme.com,Data Science,Maria Garcia,active
+E1032,George Papadopoulos,gpapadopoulos@acme.com,Finance,Victor Okafor,active
+E1033,Hannah Kim,hkim@acme.com,Engineering,Carol White,active
+E1034,Ibrahim Diallo,idiallo@acme.com,Infrastructure,Karen Schwartz,active
+E1035,Julia Novak,jnovak@acme.com,Product,Olivia Thompson,active
+E1036,Kevin O'Malley,komalley@acme.com,Security,James O'Brien,active
+E1037,Lena Muller,lmuller@acme.com,Engineering,Bob Martinez,active
+E1038,Michael Chang,mchang@acme.com,Finance,Ursula Braun,active
+E1039,Natasha Ivanova,nivanova@acme.com,HR,Sofia Andersson,active
+E1040,Oscar Lindgren,olindgren@acme.com,Infrastructure,Lars Eriksson,active
+E1041,Priya Sharma,psharma@acme.com,Data Science,Qiang Li,active
+E1042,Rene Fontaine,rfontaine@acme.com,Engineering,Carol White,terminated
+E1043,Samuel Osei,sosei@acme.com,Security,James O'Brien,terminated
+E1044,Tomoko Hayashi,thayashi@acme.com,Product,Olivia Thompson,active
+E1045,Uma Krishnan,ukrishnan@acme.com,Engineering,Bob Martinez,active
+E1046,Vera Stankovic,vstankovic@acme.com,Finance,Ursula Braun,active
+E1047,William Park,wpark@acme.com,Infrastructure,Lars Eriksson,active
+E1048,Xenia Alexandrou,xalexandrou@acme.com,HR,Sofia Andersson,leave
+E1049,Youssef Benali,ybenali@acme.com,Engineering,Carol White,active
+E1050,Zoe Mitchell,zmitchell@acme.com,Data Science,Maria Garcia,contractor

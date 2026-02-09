@@ -1,0 +1,4 @@
+UserName,user_principal_name,Role,AccessLevel,last_sign_in,Enabled
+achen,achen@acme.com,Developer,ReadWrite,2026-02-05T19:30:00Z,true
+bmartinez,bmartinez@acme.com,TechLead,Admin,2026-02-06T08:15:00Z,true
+erogers,erogers@acme.com,JuniorDev,ReadOnly,2026-02-04T16:00:00Z,true

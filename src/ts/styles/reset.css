@@ -1,0 +1,86 @@
+/**
+ * Global reset and accessibility utilities for the UAR tool.
+ *
+ * - Reduced motion media query (Section 9.5)
+ * - Tabular numbers utility (Section 9.8)
+ * - Touch-action manipulation (Section 9.9)
+ * - iOS zoom prevention on inputs (Section 9.9)
+ * - Box-sizing reset
+ * - Hover gate utility
+ */
+
+/* ---------------------------------------------------------------------------
+ * Box-sizing reset
+ * ------------------------------------------------------------------------ */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------------------------
+ * Reduced motion (Section 9.5)
+ * Disables all animations and transitions for users who prefer reduced motion.
+ * Hover color changes are kept (they are not motion).
+ * ------------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * Tabular numbers (Section 9.8)
+ * Applied to all elements displaying dynamic numeric values.
+ * Prevents layout shift as digits change width.
+ * ------------------------------------------------------------------------ */
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+ * Touch-action manipulation (Section 9.9)
+ * Prevents double-tap zoom on interactive elements.
+ * ------------------------------------------------------------------------ */
+button,
+a,
+select,
+[role="button"] {
+    touch-action: manipulation;
+}
+
+/* ---------------------------------------------------------------------------
+ * iOS zoom prevention (Section 9.9)
+ * Inputs, textareas, and selects must be at least 16px to avoid
+ * Safari auto-zoom on focus.
+ * ------------------------------------------------------------------------ */
+input,
+textarea,
+select {
+    font-size: 16px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Focus-visible outline for keyboard navigation
+ * ------------------------------------------------------------------------ */
+:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Base body styles
+ * ------------------------------------------------------------------------ */
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.5;
+}

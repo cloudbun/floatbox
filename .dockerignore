@@ -1,0 +1,9 @@
+node_modules/
+.git/
+astrolog/
+.idea/
+dist/
+build/
+uar_sample_data/
+.DS_Store
+*.md

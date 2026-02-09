@@ -1,0 +1,9 @@
+{
+  "name": "UAR Tool",
+  "short_name": "UAR",
+  "description": "Offline User Access Review Tool",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1e293b",
+  "background_color": "#0a0a0a"
+}

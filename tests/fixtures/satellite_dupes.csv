@@ -1,0 +1,6 @@
+login,email,displayName,status,group,lastLogin
+achen,achen@acme.com,Alice Chen,ACTIVE,Engineering-Lead,2026-01-28T09:14:00Z
+achen,achen@acme.com,Alice Chen,ACTIVE,DevOps-Admin,2026-02-01T10:00:00Z
+bmartinez,bmartinez@acme.com,Bob Martinez,ACTIVE,Engineering-Lead,2026-02-06T08:30:00Z
+bmartinez,bmartinez@acme.com,Bob Martinez,ACTIVE,Engineering-Lead,2026-02-06T08:30:00Z
+cwhite,cwhite@acme.com,Carol White,ACTIVE,Finance-Viewer,2026-02-05T10:22:00Z

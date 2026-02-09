@@ -1,0 +1,6 @@
+employee_id,full_name,email_address,department,manager,employment_status
+E1001,Alice Chen,achen@acme.com,Engineering,Bob Martinez,active
+E1002,Bob Martinez,bmartinez@acme.com,Engineering,Carol White,active
+E1003,Carol White,cwhite@acme.com,Finance,Diana Patel,leave
+E1004,Diana Patel,dpatel@acme.com,HR,Frank Sullivan,terminated
+E1005,Eve Rogers,erogers@acme.com,Engineering,Bob Martinez,contractor

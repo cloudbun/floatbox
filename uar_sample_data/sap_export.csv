@@ -1,0 +1,23 @@
+PersonnelNumber,Name,Email,Role,Status,LastLogon
+E1019,"Muller, Thomas",tmuller@acme.com,AP_Clerk,Active,2026-02-05T14:00:00Z
+E1020,"Braun, Ursula",ubraun@acme.com,AP_Manager,Active,2026-02-06T08:00:00Z
+E1021,"Okafor, Victor",vokafor@acme.com,Finance_Admin,Active,2026-02-03T09:30:00Z
+E1032,"Papadopoulos, George",gpapadopoulos@acme.com,AP_Clerk,Active,2026-02-02T13:50:00Z
+E1038,"Chang, Michael",mchang@acme.com,AP_Clerk,Active,2026-02-05T10:45:00Z
+E1046,"Stankovic, Vera",vstankovic@acme.com,AR_Clerk,Active,2026-02-05T08:15:00Z
+E1005,"Sullivan, Frank",fsullivan@acme.com,CFO_Delegate,Active,2026-02-04T10:30:00Z
+E1015,"Dunn, Patricia",pdunn@acme.com,Budget_Viewer,Active,2026-02-05T07:30:00Z
+E1018,"Andersson, Sofia",sandersson@acme.com,HR_Admin,Active,2026-02-04T09:45:00Z
+E1027,"Costa, Beatriz",bcosta@acme.com,HR_Specialist,Active,2026-02-03T08:00:00Z
+E1039,"Ivanova, Natasha",nivanova@acme.com,HR_Specialist,Active,2026-02-04T09:20:00Z
+E1048,"Alexandrou, Xenia",xalexandrou@acme.com,HR_Specialist,Active,2026-02-01T11:00:00Z
+E1012,"Garcia, Maria",mgarcia@acme.com,Analytics_User,Active,2026-02-06T09:50:00Z
+E1016,"Li, Qiang",qli@acme.com,Analytics_User,Active,2026-02-03T11:00:00Z
+E1025,"Ahmed, Zara",zahmed@acme.com,Analytics_User,Active,2026-02-04T12:40:00Z
+E1031,"Al-Hassan, Fatima",falhassan@acme.com,Analytics_User,Active,2026-02-06T08:20:00Z
+E1041,"Sharma, Priya",psharma@acme.com,Analytics_User,Active,2026-02-05T10:20:00Z
+E1050,"Mitchell, Zoe",zmitchell@acme.com,Analytics_Viewer,Active,2026-02-05T13:30:00Z
+E1042,"Fontaine, Rene",rfontaine@acme.com,AP_Clerk,Active,2026-01-15T16:45:00Z
+E1043,"Osei, Samuel",sosei@acme.com,Audit_Viewer,Active,2026-01-10T09:15:00Z
+E9901,"Tanaka, Kenji",ktanaka@acme.com,AP_Clerk,Active,2026-02-01T10:00:00Z
+E9902,"Morrison, Dave",dmorrison@contractor.com,Vendor_Portal,Active,2025-11-20T15:00:00Z

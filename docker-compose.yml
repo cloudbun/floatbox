@@ -1,0 +1,21 @@
+services:
+  uar:
+    build: .
+    ports:
+      - "8443:8080"
+    read_only: true
+    tmpfs:
+      - /tmp:size=10M,noexec,nosuid
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 128m
+    cpus: 0.5
+    restart: "no"
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO /dev/null http://127.0.0.1:8080/ || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

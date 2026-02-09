@@ -1,0 +1,106 @@
+/**
+ * Design tokens for the UAR tool.
+ *
+ * Easing, z-index scale, grayscale palette, semantic colors, risk colors,
+ * interactive states, and font rendering.
+ *
+ * See design document Sections 9.5, 9.6, 9.7.
+ */
+
+/* ---------------------------------------------------------------------------
+ * Root tokens (light mode default)
+ * ------------------------------------------------------------------------ */
+:root {
+    /* Easing (Section 9.5) */
+    --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
+    --ease: ease;
+
+    /* Z-index scale (Section 9.7) */
+    --z-table-sticky-header: 10;
+    --z-bulk-actions: 100;
+    --z-dropdown: 200;
+    --z-modal-overlay: 300;
+    --z-modal: 310;
+    --z-tooltip: 400;
+    --z-toast: 500;
+
+    /* Grayscale (light mode) */
+    --gray-1: #fafafa;
+    --gray-2: #f5f5f5;
+    --gray-3: #e5e5e5;
+    --gray-4: #d4d4d4;
+    --gray-5: #a3a3a3;
+    --gray-6: #737373;
+    --gray-7: #525252;
+    --gray-8: #404040;
+    --gray-9: #262626;
+    --gray-10: #171717;
+    --gray-11: #0a0a0a;
+    --gray-12: #000000;
+
+    /* Semantic colors */
+    --bg-primary: var(--gray-1);
+    --bg-secondary: var(--gray-2);
+    --bg-elevated: #ffffff;
+    --text-primary: var(--gray-11);
+    --text-secondary: var(--gray-6);
+    --border-default: var(--gray-3);
+
+    /* Risk colors (light mode -- WCAG AA 4.5:1 on white) */
+    --risk-critical: #DC2626;
+    --risk-high: #EA580C;
+    --risk-medium: #CA8A04;
+    --risk-low: #2563EB;
+    --risk-info: #6B7280;
+
+    /* Interactive */
+    --focus-ring: #2563EB;
+    --selection-bg: rgba(37, 99, 235, 0.1);
+
+    /* Font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------------------------------------------------------------------------
+ * Dark mode (Section 9.6)
+ * Activated by [data-theme="dark"] on the document element.
+ * Inverts grayscale; uses dark-appropriate risk colors.
+ * ------------------------------------------------------------------------ */
+[data-theme="dark"] {
+    --gray-1: #0a0a0a;
+    --gray-2: #171717;
+    --gray-3: #262626;
+    --gray-4: #404040;
+    --gray-5: #525252;
+    --gray-6: #737373;
+    --gray-7: #a3a3a3;
+    --gray-8: #d4d4d4;
+    --gray-9: #e5e5e5;
+    --gray-10: #f5f5f5;
+    --gray-11: #fafafa;
+    --gray-12: #ffffff;
+
+    --bg-primary: var(--gray-1);
+    --bg-secondary: var(--gray-2);
+    --bg-elevated: var(--gray-3);
+
+    /* Risk colors (dark mode -- WCAG AA 4.5:1 on #0a0a0a) */
+    --risk-critical: #F87171;
+    --risk-high: #FB923C;
+    --risk-medium: #FACC15;
+    --risk-low: #60A5FA;
+    --risk-info: #9CA3AF;
+}
+
+/* ---------------------------------------------------------------------------
+ * Theme transition suppression (Section 9.6)
+ * Applied during setTheme() to prevent color-change transitions.
+ * ------------------------------------------------------------------------ */
+.no-transitions,
+.no-transitions *,
+.no-transitions *::before,
+.no-transitions *::after {
+    transition: none !important;
+}
