@@ -219,10 +219,14 @@ export function mergeJoinResults(
         for (const matched of joinResult.matched) {
             const {riskLevel, riskScore} = scoreMatched(matched);
 
+            const sotNameEmpty = !matched.sot.displayName?.trim();
+            const satelliteHasName = !!matched.satellite.displayName?.trim();
+            const fillFromSatellite = sotNameEmpty && satelliteHasName;
+
             records.push({
                 canonicalId: `${matched.sot.canonicalId}::${systemName}::${matched.satellite.sourceRow}`,
                 employeeId: matched.sot.employeeId,
-                displayName: matched.sot.displayName,
+                displayName: fillFromSatellite ? matched.satellite.displayName : matched.sot.displayName,
                 email: matched.sot.email,
                 department: matched.sot.department,
                 manager: matched.sot.manager,
@@ -232,8 +236,8 @@ export function mergeJoinResults(
                 entitlement: matched.satellite.entitlement,
                 lastLogin: matched.satellite.lastLogin,
                 accountStatus: matched.satellite.accountStatus,
-                reviewAction: null,
-                reviewNote: '',
+                reviewAction: fillFromSatellite ? 'flag' : null,
+                reviewNote: fillFromSatellite ? `Display name sourced from satellite (${systemName}), not present in SoT` : '',
                 sourceFile: matched.satellite.sourceFile,
                 sourceRowNumber: matched.satellite.sourceRow,
                 matchType: matched.matchType as MatchType,
