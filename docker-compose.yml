@@ -1,5 +1,6 @@
 services:
   uar:
+    build: .
     image: ghcr.io/cloudbun/floatbox:latest
     ports:
       - "8443:8080"
