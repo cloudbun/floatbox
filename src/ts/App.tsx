@@ -442,6 +442,14 @@ export default function App() {
         reportHook.updateAction(recordId, record?.reviewAction ?? null, note);
     }, [reportHook]);
 
+    const handleDisplayNameChange = useCallback((recordId: string, newName: string) => {
+        reportHook.updateRecord(recordId, {displayName: newName});
+    }, [reportHook]);
+
+    const handleMergeRecords = useCallback((recordIds: string[], primaryId: string) => {
+        reportHook.mergeRecords(recordIds, primaryId);
+    }, [reportHook]);
+
     // Risk filter state.
     const [riskFilter, setRiskFilter] = useState<RiskLevel | null>(null);
 
@@ -668,6 +676,8 @@ export default function App() {
                                     riskFilter={riskFilter}
                                     onRiskFilterChange={setRiskFilter}
                                     onNoteChange={handleNoteChange}
+                                    onDisplayNameChange={handleDisplayNameChange}
+                                    onMergeRecords={handleMergeRecords}
                                 >
                                     <ReportViewer.Toolbar>
                                         <ReportViewer.Search/>

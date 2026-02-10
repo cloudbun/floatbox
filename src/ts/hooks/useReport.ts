@@ -88,6 +88,28 @@ export interface UseReportReturn {
 
     /** Set of unique system names in the report. */
     systems: string[];
+
+    /**
+     * Partial-update a single record by ID.
+     * Returns the previous record for undo support, or null if not found.
+     */
+    updateRecord: (
+        recordId: string,
+        updates: Partial<CanonicalRecord>
+    ) => CanonicalRecord | null;
+
+    /**
+     * Merge multiple records into one.
+     * The primaryId record becomes the base; roles/entitlements are merged,
+     * highest risk score and most recent lastLogin are kept, and secondary
+     * records are removed.
+     * Returns the previous records array for undo support, or null if fewer
+     * than 2 matching records were found.
+     */
+    mergeRecords: (
+        recordIds: string[],
+        primaryId: string
+    ) => CanonicalRecord[] | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -438,6 +460,92 @@ export function useReport(): UseReportReturn {
         return summary;
     }, [report]);
 
+    /**
+     * Partial-update a single record by ID.
+     * Returns the previous record for undo, or null if not found.
+     */
+    const updateRecord = useCallback(
+        (recordId: string, updates: Partial<CanonicalRecord>): CanonicalRecord | null => {
+            let previous: CanonicalRecord | null = null;
+
+            setReportState((prev) =>
+                prev.map((record) => {
+                    if (record.canonicalId === recordId) {
+                        previous = record;
+                        return {...record, ...updates};
+                    }
+                    return record;
+                })
+            );
+
+            return previous;
+        },
+        []
+    );
+
+    /**
+     * Merge multiple records into one.
+     * The primaryId record is the base; secondaries contribute role/entitlement,
+     * highest riskScore, and most-recent lastLogin. Secondaries are removed.
+     * Returns the full previous records array for undo, or null if < 2 matches.
+     */
+    const mergeRecords = useCallback(
+        (recordIds: string[], primaryId: string): CanonicalRecord[] | null => {
+            let previousRecords: CanonicalRecord[] | null = null;
+
+            setReportState((prev) => {
+                const idSet = new Set(recordIds);
+                const matching = prev.filter((r) => idSet.has(r.canonicalId));
+
+                if (matching.length < 2) return prev;
+
+                const primary = matching.find((r) => r.canonicalId === primaryId);
+                if (!primary) return prev;
+
+                // Snapshot for undo
+                previousRecords = [...prev];
+
+                const secondaries = matching.filter((r) => r.canonicalId !== primaryId);
+
+                // Start with primary as base and merge each secondary
+                let mergedRole = primary.role;
+                let mergedEntitlement = primary.entitlement;
+                let bestRiskScore = primary.riskScore;
+                let bestRiskLevel = primary.riskLevel;
+                let latestLogin = primary.lastLogin;
+
+                for (const sec of secondaries) {
+                    mergedRole = mergeRoleFields(mergedRole, sec.role);
+                    mergedEntitlement = mergeRoleFields(mergedEntitlement, sec.entitlement);
+                    if (sec.riskScore > bestRiskScore) {
+                        bestRiskScore = sec.riskScore;
+                        bestRiskLevel = sec.riskLevel;
+                    }
+                    if (sec.lastLogin && (!latestLogin || sec.lastLogin > latestLogin)) {
+                        latestLogin = sec.lastLogin;
+                    }
+                }
+
+                const merged: CanonicalRecord = {
+                    ...primary,
+                    role: mergedRole,
+                    entitlement: mergedEntitlement,
+                    riskScore: bestRiskScore,
+                    riskLevel: bestRiskLevel,
+                    lastLogin: latestLogin,
+                };
+
+                const secondaryIds = new Set(secondaries.map((s) => s.canonicalId));
+                return prev
+                    .map((r) => (r.canonicalId === primaryId ? merged : r))
+                    .filter((r) => !secondaryIds.has(r.canonicalId));
+            });
+
+            return previousRecords;
+        },
+        []
+    );
+
     // Extract unique system names
     const systems = useMemo<string[]>(() => {
         const systemSet = new Set<string>();
@@ -484,6 +592,8 @@ export function useReport(): UseReportReturn {
         setReport,
         appendRecords,
         updateAction,
+        updateRecord,
+        mergeRecords,
         filter,
         setFilter,
         filteredRecords,

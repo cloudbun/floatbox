@@ -120,6 +120,10 @@ interface ReportViewerContextValue {
     setFocusedRowIndex: (idx: number) => void;
     /** Callback to update a record's review note. */
     onNoteChange: (recordId: string, note: string) => void;
+    /** Callback to update a record's display name. */
+    onDisplayNameChange: (recordId: string, newName: string) => void;
+    /** Callback to merge multiple records into one. */
+    onMergeRecords: (recordIds: string[], primaryId: string) => void;
 }
 
 const ReportViewerContext = createContext<ReportViewerContextValue | null>(null);
@@ -151,6 +155,10 @@ interface ReportViewerProps {
     onRiskFilterChange?: (level: RiskLevel | null) => void;
     /** Callback to update a record's review note. */
     onNoteChange?: (recordId: string, note: string) => void;
+    /** Callback to update a record's display name inline. */
+    onDisplayNameChange?: (recordId: string, newName: string) => void;
+    /** Callback to merge multiple records into one. */
+    onMergeRecords?: (recordIds: string[], primaryId: string) => void;
     children: ReactNode;
 }
 
@@ -219,6 +227,8 @@ function ReportViewer({
                           riskFilter: externalRiskFilter,
                           onRiskFilterChange,
                           onNoteChange,
+                          onDisplayNameChange,
+                          onMergeRecords,
                           children,
                       }: ReportViewerProps) {
     const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
@@ -307,6 +317,10 @@ function ReportViewer({
         focusedRowIndex,
         setFocusedRowIndex,
         onNoteChange: onNoteChange ?? (() => {
+        }),
+        onDisplayNameChange: onDisplayNameChange ?? (() => {
+        }),
+        onMergeRecords: onMergeRecords ?? (() => {
         }),
     };
 
@@ -442,10 +456,18 @@ function Filters() {
 // ---------------------------------------------------------------------------
 
 function BulkActions() {
-    const {selection, setSelection, onBulkAction, filteredRecords} =
+    const {selection, setSelection, onBulkAction, onMergeRecords, filteredRecords, records} =
         useReportViewerContext();
 
+    const [mergeModalOpen, setMergeModalOpen] = useState(false);
+
     const count = selection.selectedIds.size;
+
+    // Gather selected records for merge modal
+    const selectedRecords = useMemo(() => {
+        if (!mergeModalOpen) return [];
+        return records.filter((r) => selection.selectedIds.has(r.canonicalId));
+    }, [mergeModalOpen, records, selection.selectedIds]);
 
     // Select all matching current filter.
     const handleSelectAll = useCallback(() => {
@@ -458,6 +480,12 @@ function BulkActions() {
     const handleClearSelection = useCallback(() => {
         setSelection({mode: 'none', selectedIds: new Set()});
     }, [setSelection]);
+
+    const handleMergeConfirm = useCallback((recordIds: string[], primaryId: string) => {
+        onMergeRecords(recordIds, primaryId);
+        setMergeModalOpen(false);
+        setSelection({mode: 'none', selectedIds: new Set()});
+    }, [onMergeRecords, setSelection]);
 
     if (count === 0) {
         return (
@@ -481,17 +509,18 @@ function BulkActions() {
     }
 
     return (
-        <div
-            style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px 12px',
-                borderRadius: '8px',
-                backgroundColor: 'var(--selection-bg)',
-                border: '1px solid var(--focus-ring)',
-            }}
-        >
+        <>
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    backgroundColor: 'var(--selection-bg)',
+                    border: '1px solid var(--focus-ring)',
+                }}
+            >
       <span
           className="tabular-nums"
           style={{fontSize: '13px', fontWeight: 600}}
@@ -499,38 +528,55 @@ function BulkActions() {
         {count.toLocaleString('en-US')} selected
       </span>
 
-            <button
-                type="button"
-                onClick={() => onBulkAction('approve')}
-                style={bulkButtonStyle}
-            >
-                Approve All
-            </button>
-            <button
-                type="button"
-                onClick={() => onBulkAction('revoke')}
-                style={bulkButtonStyle}
-            >
-                Revoke All
-            </button>
-            <button
-                type="button"
-                onClick={() => onBulkAction('flag')}
-                style={bulkButtonStyle}
-            >
-                Flag All
-            </button>
-            <button
-                type="button"
-                onClick={handleClearSelection}
-                style={{
-                    ...bulkButtonStyle,
-                    color: 'var(--text-secondary)',
-                }}
-            >
-                Clear Selection
-            </button>
-        </div>
+                <button
+                    type="button"
+                    onClick={() => onBulkAction('approve')}
+                    style={bulkButtonStyle}
+                >
+                    Approve All
+                </button>
+                <button
+                    type="button"
+                    onClick={() => onBulkAction('revoke')}
+                    style={bulkButtonStyle}
+                >
+                    Revoke All
+                </button>
+                <button
+                    type="button"
+                    onClick={() => onBulkAction('flag')}
+                    style={bulkButtonStyle}
+                >
+                    Flag All
+                </button>
+                {count >= 2 && (
+                    <button
+                        type="button"
+                        onClick={() => setMergeModalOpen(true)}
+                        style={bulkButtonStyle}
+                    >
+                        Merge
+                    </button>
+                )}
+                <button
+                    type="button"
+                    onClick={handleClearSelection}
+                    style={{
+                        ...bulkButtonStyle,
+                        color: 'var(--text-secondary)',
+                    }}
+                >
+                    Clear Selection
+                </button>
+            </div>
+            {mergeModalOpen && selectedRecords.length >= 2 && (
+                <MergeModal
+                    records={selectedRecords}
+                    onConfirm={handleMergeConfirm}
+                    onClose={() => setMergeModalOpen(false)}
+                />
+            )}
+        </>
     );
 }
 
@@ -1063,6 +1109,277 @@ function NoteInput({
 }
 
 // ---------------------------------------------------------------------------
+// EditableNameCell -- inline editable display name (mirrors NoteInput pattern)
+// ---------------------------------------------------------------------------
+
+function EditableNameCell({
+                              recordId,
+                              value,
+                              onDisplayNameChange,
+                          }: {
+    recordId: string;
+    value: string;
+    onDisplayNameChange: (recordId: string, newName: string) => void;
+}) {
+    const [localValue, setLocalValue] = useState(value);
+    const prevRecordId = useRef(recordId);
+
+    // Re-sync local state when the record changes (virtualizer reuse)
+    if (prevRecordId.current !== recordId) {
+        prevRecordId.current = recordId;
+        setLocalValue(value);
+    }
+
+    const handleBlur = useCallback(() => {
+        const trimmed = localValue.trim();
+        if (trimmed && trimmed !== value) {
+            onDisplayNameChange(recordId, trimmed);
+        } else {
+            setLocalValue(value);
+        }
+    }, [recordId, localValue, value, onDisplayNameChange]);
+
+    return (
+        <input
+            type="text"
+            value={localValue}
+            onChange={(e) => setLocalValue(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    e.currentTarget.blur();
+                } else if (e.key === 'Escape') {
+                    setLocalValue(value);
+                    e.currentTarget.blur();
+                }
+                e.stopPropagation();
+            }}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Edit display name`}
+            style={{
+                width: '100%',
+                padding: '2px 6px',
+                fontSize: '13px',
+                fontWeight: 500,
+                border: '1px solid transparent',
+                borderRadius: '4px',
+                backgroundColor: 'transparent',
+                color: 'var(--text-primary)',
+                outline: 'none',
+                transition: 'border-color 150ms ease, background-color 150ms ease',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+            }}
+            onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-default)';
+                e.currentTarget.style.backgroundColor = 'var(--bg-elevated)';
+            }}
+            onBlurCapture={(e) => {
+                e.currentTarget.style.borderColor = 'transparent';
+                e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+        />
+    );
+}
+
+// ---------------------------------------------------------------------------
+// MergeModal -- pick primary record and preview merge result
+// ---------------------------------------------------------------------------
+
+function MergeModal({
+                        records,
+                        onConfirm,
+                        onClose,
+                    }: {
+    records: CanonicalRecord[];
+    onConfirm: (recordIds: string[], primaryId: string) => void;
+    onClose: () => void;
+}) {
+    const [primaryId, setPrimaryId] = useState(records[0]?.canonicalId ?? '');
+
+    // Compute merge preview
+    const preview = useMemo(() => {
+        const primary = records.find((r) => r.canonicalId === primaryId);
+        if (!primary) return null;
+        const secondaries = records.filter((r) => r.canonicalId !== primaryId);
+
+        let mergedRole = primary.role;
+        let mergedEntitlement = primary.entitlement;
+        let bestRiskScore = primary.riskScore;
+        let latestLogin = primary.lastLogin;
+
+        for (const sec of secondaries) {
+            const splitAndMerge = (a: string, b: string) => {
+                const split = (s: string) =>
+                    s.split(/[,;]/).map((v) => v.trim()).filter(Boolean);
+                const seen = new Set<string>();
+                const merged: string[] = [];
+                for (const v of [...split(a), ...split(b)]) {
+                    const key = v.toLowerCase();
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        merged.push(v);
+                    }
+                }
+                return merged.join(', ');
+            };
+            mergedRole = splitAndMerge(mergedRole, sec.role);
+            mergedEntitlement = splitAndMerge(mergedEntitlement, sec.entitlement);
+            if (sec.riskScore > bestRiskScore) bestRiskScore = sec.riskScore;
+            if (sec.lastLogin && (!latestLogin || sec.lastLogin > latestLogin)) {
+                latestLogin = sec.lastLogin;
+            }
+        }
+
+        return {role: mergedRole, entitlement: mergedEntitlement, riskScore: bestRiskScore, lastLogin: latestLogin};
+    }, [records, primaryId]);
+
+    const handleConfirm = useCallback(() => {
+        onConfirm(records.map((r) => r.canonicalId), primaryId);
+    }, [records, primaryId, onConfirm]);
+
+    // Close on Escape
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onClose]);
+
+    return (
+        <div
+            style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 1000,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(0,0,0,0.5)',
+            }}
+            onClick={(e) => {
+                if (e.target === e.currentTarget) onClose();
+            }}
+        >
+            <div
+                style={{
+                    width: '520px',
+                    maxHeight: '80vh',
+                    overflowY: 'auto',
+                    borderRadius: '12px',
+                    border: '1px solid var(--border-default)',
+                    backgroundColor: 'var(--bg-elevated)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.24)',
+                    padding: '24px',
+                }}
+            >
+                <h3 style={{margin: '0 0 16px', fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)'}}>
+                    Merge Records
+                </h3>
+                <p style={{margin: '0 0 16px', fontSize: '13px', color: 'var(--text-secondary)'}}>
+                    Select the primary record. The others will be merged into it and removed.
+                </p>
+
+                {/* Record list with radio buttons */}
+                <div style={{display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px'}}>
+                    {records.map((r) => (
+                        <label
+                            key={r.canonicalId}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                border: `1px solid ${primaryId === r.canonicalId ? 'var(--focus-ring)' : 'var(--border-default)'}`,
+                                backgroundColor: primaryId === r.canonicalId ? 'var(--selection-bg)' : 'transparent',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                            }}
+                        >
+                            <input
+                                type="radio"
+                                name="merge-primary"
+                                checked={primaryId === r.canonicalId}
+                                onChange={() => setPrimaryId(r.canonicalId)}
+                                style={{width: '16px', height: '16px', cursor: 'pointer', flexShrink: 0}}
+                            />
+                            <div style={{flex: 1, overflow: 'hidden'}}>
+                                <div style={{fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                                    {r.displayName || r.email}
+                                </div>
+                                <div style={{fontSize: '11px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                                    {r.system} &middot; {r.role || 'No role'}
+                                </div>
+                            </div>
+                        </label>
+                    ))}
+                </div>
+
+                {/* Merge preview */}
+                {preview && (
+                    <div style={{
+                        padding: '12px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--bg-default)',
+                        border: '1px solid var(--border-default)',
+                        marginBottom: '20px',
+                        fontSize: '12px',
+                    }}>
+                        <div style={{fontWeight: 600, marginBottom: '8px', color: 'var(--text-primary)'}}>Merge Preview</div>
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '4px', color: 'var(--text-secondary)'}}>
+                            <div><strong>Role:</strong> {preview.role || '\u2014'}</div>
+                            <div><strong>Entitlement:</strong> {preview.entitlement || '\u2014'}</div>
+                            <div><strong>Risk Score:</strong> {preview.riskScore}</div>
+                            <div><strong>Last Login:</strong> {preview.lastLogin ? new Date(preview.lastLogin).toLocaleDateString() : '\u2014'}</div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Actions */}
+                <div style={{display: 'flex', justifyContent: 'flex-end', gap: '8px'}}>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        style={{
+                            minHeight: '36px',
+                            padding: '6px 16px',
+                            fontSize: '13px',
+                            fontWeight: 500,
+                            border: '1px solid var(--border-default)',
+                            borderRadius: '6px',
+                            backgroundColor: 'var(--bg-elevated)',
+                            color: 'var(--text-primary)',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleConfirm}
+                        style={{
+                            minHeight: '36px',
+                            padding: '6px 16px',
+                            fontSize: '13px',
+                            fontWeight: 600,
+                            border: 'none',
+                            borderRadius: '6px',
+                            backgroundColor: 'var(--focus-ring)',
+                            color: '#fff',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        Merge {records.length} Records
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ---------------------------------------------------------------------------
 // TableRow (forwardRef for virtualizer measurement)
 // ---------------------------------------------------------------------------
 
@@ -1076,6 +1393,7 @@ interface TableRowProps {
     onToggleSelection: (recordId: string) => void;
     onActionChange: (recordId: string, action: ReviewAction | null, role?: string) => void;
     onNoteChange: (recordId: string, note: string) => void;
+    onDisplayNameChange: (recordId: string, newName: string) => void;
     onFocus: (index: number) => void;
     adminRolesLookup?: Map<string, string[]>;
     style?: React.CSSProperties;
@@ -1093,6 +1411,7 @@ const TableRow = forwardRef<HTMLDivElement, TableRowProps>(
             onToggleSelection,
             onActionChange,
             onNoteChange,
+            onDisplayNameChange,
             onFocus,
             adminRolesLookup,
             style,
@@ -1149,21 +1468,20 @@ const TableRow = forwardRef<HTMLDivElement, TableRowProps>(
                                 alignItems: 'flex-start',
                                 justifyContent: 'center'
                             }} role="gridcell">
-                                <div style={{
-                                    fontWeight: 500,
-                                    fontSize: '13px',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    maxWidth: '100%'
-                                }}>
-                                    {record.displayName || '\u2014'}
+                                <div style={{maxWidth: '100%'}}>
+                                    <EditableNameCell
+                                        recordId={recordId}
+                                        value={record.displayName || ''}
+                                        onDisplayNameChange={onDisplayNameChange}
+                                    />
                                 </div>
                                 <div style={{
                                     fontSize: '11px',
                                     color: 'var(--text-secondary)',
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
-                                    maxWidth: '100%'
+                                    maxWidth: '100%',
+                                    paddingLeft: '6px',
                                 }}>
                                     {record.email}
                                 </div>
@@ -1462,6 +1780,7 @@ function Table() {
         toggleSelection,
         onActionChange,
         onNoteChange,
+        onDisplayNameChange,
         focusedRowIndex,
         setFocusedRowIndex,
     } = useReportViewerContext();
@@ -1821,6 +2140,7 @@ function Table() {
                                 onToggleSelection={toggleSelection}
                                 onActionChange={onActionChange}
                                 onNoteChange={onNoteChange}
+                                onDisplayNameChange={onDisplayNameChange}
                                 onFocus={setFocusedRowIndex}
                                 adminRolesLookup={adminRolesLookup}
                                 style={{
