@@ -10,6 +10,7 @@ type SoTRecord struct {
 	Department       string `json:"department"`
 	Manager          string `json:"manager"`
 	EmploymentStatus string `json:"employmentStatus"`
+	AdminInfo        string `json:"adminInfo"`
 }
 
 // SatelliteRecord represents a record from a satellite system (e.g., Okta, AWS, SAP).

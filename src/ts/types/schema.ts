@@ -108,6 +108,7 @@ export interface SoTRecord {
     department: string;
     manager: string;
     employmentStatus: string;
+    adminInfo: string;
 }
 
 /** A single record parsed from a satellite system CSV. Mirrors Go SatelliteRecord JSON. */

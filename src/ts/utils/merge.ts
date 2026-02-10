@@ -232,7 +232,11 @@ export function mergeJoinResults(
                 manager: matched.sot.manager,
                 employmentStatus: matched.sot.employmentStatus,
                 system: systemName,
-                role: matched.satellite.role,
+                role: matched.sot.adminInfo
+                    ? (matched.satellite.role
+                        ? matched.satellite.role + '; ' + matched.sot.adminInfo
+                        : matched.sot.adminInfo)
+                    : matched.satellite.role,
                 entitlement: matched.satellite.entitlement,
                 lastLogin: matched.satellite.lastLogin,
                 accountStatus: matched.satellite.accountStatus,

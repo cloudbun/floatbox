@@ -3,6 +3,7 @@ package schema
 import (
 	"encoding/json"
 	"regexp"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -13,6 +14,7 @@ import (
 var (
 	middleInitialRe = regexp.MustCompile(`\b[a-z]\.?\s`)
 	whitespaceRe    = regexp.MustCompile(`\s+`)
+	adminColumnRe   = regexp.MustCompile(`(?i)admin`)
 )
 
 // Known name suffixes to strip during normalization.
@@ -77,6 +79,28 @@ func stripDiacritics(s string) string {
 	return result.String()
 }
 
+// collectAdminValues finds all columns whose header matches /admin/i,
+// collects their non-empty values in sorted header order, and returns
+// them joined with "; ".
+func collectAdminValues(record map[string]string) string {
+	var headers []string
+	for h := range record {
+		if adminColumnRe.MatchString(h) {
+			headers = append(headers, h)
+		}
+	}
+	sort.Strings(headers)
+
+	var vals []string
+	for _, h := range headers {
+		v := strings.TrimSpace(record[h])
+		if v != "" {
+			vals = append(vals, v)
+		}
+	}
+	return strings.Join(vals, "; ")
+}
+
 // NormalizeSoT transforms raw CSV records into SoTRecord structs using the provided column mapping.
 func NormalizeSoT(records []map[string]string, columnMapJSON string) []*SoTRecord {
 	mapping := parseColumnMapping(columnMapJSON)
@@ -104,6 +128,7 @@ func NormalizeSoT(records []map[string]string, columnMapJSON string) []*SoTRecor
 			Department:       strings.TrimSpace(mapped["department"]),
 			Manager:          strings.TrimSpace(mapped["manager"]),
 			EmploymentStatus: strings.TrimSpace(strings.ToLower(mapped["employmentStatus"])),
+			AdminInfo:        collectAdminValues(record),
 		}
 		result = append(result, sotRecord)
 	}
@@ -119,11 +144,20 @@ func NormalizeSatellite(records []map[string]string, systemName string, columnMa
 	for i, record := range records {
 		mapped := applyMapping(record, mapping)
 
+		role := strings.TrimSpace(mapped["role"])
+		if adminVals := collectAdminValues(record); adminVals != "" {
+			if role != "" {
+				role = role + "; " + adminVals
+			} else {
+				role = adminVals
+			}
+		}
+
 		sat := SatelliteRecord{
 			Email:         strings.TrimSpace(strings.ToLower(mapped["email"])),
 			UserId:        strings.TrimSpace(mapped["userId"]),
 			DisplayName:   strings.TrimSpace(mapped["displayName"]),
-			Role:          strings.TrimSpace(mapped["role"]),
+			Role:          role,
 			Entitlement:   strings.TrimSpace(mapped["entitlement"]),
 			LastLogin:     strings.TrimSpace(mapped["lastLogin"]),
 			AccountStatus: strings.TrimSpace(strings.ToLower(mapped["accountStatus"])),
