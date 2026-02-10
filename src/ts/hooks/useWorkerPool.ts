@@ -572,7 +572,9 @@ export function useWorkerPool(): UseWorkerPoolReturn {
                 // -------------------------------------------------------------------
                 // Phase 2: Parse satellites in parallel
                 // -------------------------------------------------------------------
-                addLog(`Spawning ${satellites.length} satellite worker${satellites.length !== 1 ? 's' : ''}...`);
+                if (satellites.length > 0) {
+                    addLog(`Spawning ${satellites.length} satellite worker${satellites.length !== 1 ? 's' : ''}...`);
+                }
                 const satellitePromises = satellites.map((sat) => {
                     const buffer = getBuffer(sat.id);
                     if (!buffer) {
